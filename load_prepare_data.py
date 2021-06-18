@@ -9,7 +9,7 @@ path = '/content/gdrive/MyDrive/Emotion Detection/Data/fer2013.csv'
 df = pd.read_csv(path)
 
 #Split data into training and testing set
-train_x, train_y, test_x, test_y = [], [], [], []
+train_x, train_y, val_x, val_y, test_x, test_y = [], [], [], [], [], []
 for index, row in df.iterrows():
     val = row['pixels'].split(' ')
     try:
@@ -17,6 +17,9 @@ for index, row in df.iterrows():
             train_x.append(np.array(val, 'float32'))
             train_y.append(row['emotion'])
         elif 'PublicTest' in row['Usage']:
+            val_x.append(np.array(val, 'float32'))
+            val_y.append(row['emotion'])
+        else:
             test_x.append(np.array(val, 'float32'))
             test_y.append(row['emotion'])
     except:
@@ -27,31 +30,29 @@ from keras.utils import np_utils
 
 train_x = np.array(train_x, 'float32')
 train_y = np.array(train_y, 'float32')
+val_x = np.array(val_x, 'float32')
+val_y = np.array(val_y, 'float32')
 test_x = np.array(test_x, 'float32')
 test_y = np.array(test_y, 'float32')
 
 train_y = np_utils.to_categorical(train_y, num_classes = 7)
+val_y = np_utils.to_categorical(val_y, num_classes = 7)
 test_y = np_utils.to_categorical(test_y, num_classes = 7)
 
 train_x /= 255.0
 train_x -= 0.5
 train_x *= 2.0
+val_x /=255.0
+val_x -= 0.5
+val_x *= 2.0
 test_x /= 255.0
 test_x -= 0.5
 test_x *= 2.0
 
 train_x = train_x.reshape(train_x.shape[0], 48, 48, 1)
+val_x = val_x.reshape(val_x.shape[0], 48, 48, 1)
 test_x = test_x.reshape(test_x.shape[0], 48, 48, 1)
 
-#Split training set into training and validation data
-length_samples = len(train_x)
-length_train_samples = int((1 - 0.2) * length_samples)
-
-train_data = train_x[:length_train_samples]
-train_label = train_y[:length_train_samples]
-
-val_x = train_x[length_train_samples:]
-val_y = train_y[length_train_samples:]
 val_data = (val_x, val_y)
 
 from keras.preprocessing.image import ImageDataGenerator
